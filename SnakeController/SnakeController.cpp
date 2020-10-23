@@ -20,19 +20,28 @@ Controller::Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePo
     : m_displayPort(p_displayPort),
       m_foodPort(p_foodPort),
       m_scorePort(p_scorePort),
-      m_paused(false)
+      m_paused(false),
+      m_body(std::istringstream istr(p_config)),
+      m_foodPosition(std::istringstream istr(p_config);)
 {
     std::istringstream istr(p_config);
     char w, f, s, d;
 
     int width, height, length;
     int foodX, foodY;
-    istr >> w >> width >> height >> f >> foodX >> foodY >> s;
+    istr >> w >> >> f >> s;
+
+    m_mapDimension.readDimensions();
+    m_foodPosition.readPositions();
 
     if (w == 'W' and f == 'F' and s == 'S') {
-        m_mapDimension = std::make_pair(width, height);
-        m_foodPosition = std::make_pair(foodX, foodY);
+        m_mapDimension.width = widht;
+        m_mapDimension.height = height;
 
+        m_foodPosition.x = foodX;
+        m_foodPosition.y = foodY;
+
+        
         istr >> d;
         switch (d) {
             case 'U':
@@ -53,9 +62,7 @@ Controller::Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePo
         istr >> length;
 
         while (length--) {
-            Segment seg;
-            istr >> seg.x >> seg.y;
-            m_segments.push_back(seg);
+            m_body.add_segment();
         }
     } else {
         throw ConfigurationError();
@@ -64,13 +71,12 @@ Controller::Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePo
 
 bool Controller::isSegmentAtPosition(int x, int y) const
 {
-    return m_segments.end() !=  std::find_if(m_segments.cbegin(), m_segments.cend(),
-        [x, y](auto const& segment){ return segment.x == x and segment.y == y; });
+    m_body.isSegmentAtPosition(x, y);
 }
 
 bool Controller::isPositionOutsideMap(int x, int y) const
 {
-    return x < 0 or y < 0 or x >= m_mapDimension.first or y >= m_mapDimension.second;
+    m_mapDimension.isPositionOutsideMap(x, y);
 }
 
 void Controller::sendPlaceNewFood(int x, int y)
